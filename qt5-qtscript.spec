@@ -4,13 +4,13 @@
 
 Name:    qt5-%{qt_module}
 Version: 5.11.1
-Release: 4
+Release: 5
 Summary: QtScript component for qt5
 License: LGPLv2 with exceptions or GPLv3 with exceptions
 URL:     http://www.qt.io
 
-%global major_minor %(echo %{version} | cut -d. -f1-2)
-Source0: https://download.qt.io/archive/qt/5.11/5.11.1/submodules/qtscript-everywhere-src-5.11.1.tar.xz
+%global  major_minor %(echo %{version} | cut -d. -f1-2)
+Source0: https://download.qt.io/new_archive/qt/5.11/5.11.1/submodules/qtscript-everywhere-src-5.11.1.tar.xz
 
 BuildRequires: gcc-c++
 BuildRequires: qt5-qtbase-devel qt5-qtbase-private-devel
@@ -76,5 +76,8 @@ rm -fv %{buildroot}%{_qt5_libdir}/lib*.la
 
 
 %changelog
+* Mon Sep 14 2020 liuweibo <liuweibo10@huawei.com> - 5.11.1-5
+- Fix Source0 
+
 * Fri Feb 14 2020 lingsheng <lingsheng@huawei.com> - 5.11.1-4
 - Package init
