@@ -1,30 +1,45 @@
-# spec file for qt5-qtscript
+%if !0%{?bootstrap}
+%ifnarch %{arm}
+%global tests 1
+%endif
+%endif
 
 %global qt_module qtscript
 
-Name:    qt5-%{qt_module}
-Version: 5.11.1
-Release: 5
-Summary: QtScript component for qt5
-License: LGPLv2 with exceptions or GPLv3 with exceptions
-URL:     http://www.qt.io
+Name:          qt5-%{qt_module}
+Version:       5.15.2
+Release:       1
+Summary:       QtScript component for qt5
+License:       LGPLv2 with exceptions or GPLv3 with exceptions
+Url:           http://www.qt.io
 
 %global  major_minor %(echo %{version} | cut -d. -f1-2)
-Source0: https://download.qt.io/new_archive/qt/5.11/5.11.1/submodules/qtscript-everywhere-src-5.11.1.tar.xz
+Source0:       https://download.qt.io/official_releases/qt/%{major_minor}/%{version}/submodules/%{qt_module}-everywhere-src-%{version}.tar.xz
 
+Patch0:        qtscript-everywhere-src-5.12.1-s390.patch
+
+BuildRequires: make
 BuildRequires: gcc-c++
 BuildRequires: qt5-qtbase-devel qt5-qtbase-private-devel
+%{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
 
+%if ! 0%{?bootstrap}
+BuildRequires: pkgconfig(Qt5UiTools)
+%endif
+
+%if 0%{?tests}
+BuildRequires: dbus-x11 mesa-dri-drivers time xorg-x11-server-Xvfb
+%endif
 
 %package devel
-Summary: Development files for %{name}
-Provides: %{name}-private-devel = %{version}-%{release}
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: qt5-qtbase-devel%{?_isa}
+Summary:       Development files for %{name}
+Provides:      %{name}-private-devel = %{version}-%{release}
+Requires:      %{name}%{?_isa} = %{version}-%{release}
+Requires:      qt5-qtbase-devel%{?_isa}
 
 %package help
-Summary: Programming examples for %{name}
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Summary:       Programming examples for %{name}
+Requires:      %{name}%{?_isa} = %{version}-%{release}
 
 
 %description
@@ -38,7 +53,7 @@ Examples files for %{name}
 
 
 %prep
-%setup -q -n %{qt_module}-everywhere-src-%{version}
+%autosetup -n %{qt_module}-everywhere-src-%{version} -p1
 
 
 %build
@@ -50,6 +65,25 @@ Examples files for %{name}
 %make_install INSTALL_ROOT=%{buildroot}
 sed -i -e "/^QMAKE_PRL_BUILD_DIR/d" -e "/^QMAKE_PRL_LIBS/d" %{buildroot}%{_qt5_libdir}/*.prl
 rm -fv %{buildroot}%{_qt5_libdir}/lib*.la
+
+%check
+%if 0%{?tests}
+export CTEST_OUTPUT_ON_FAILURE=1
+export PATH=%{buildroot}%{_qt5_bindir}:$PATH
+export LD_LIBRARY_PATH=%{buildroot}%{_qt5_libdir}
+%make_build -k sub-tests-all ||:
+timeout 180 \
+xvfb-run -a \
+time \
+%make_build check -k -C tests ||:
+if [ "$?" -eq "124" ]; then
+echo 'make check timeout reached!'
+exit 1
+fi
+%endif
+
+
+%ldconfig_scriptlets
 
 %files
 %license LICENSE.LGPL*
@@ -76,6 +110,9 @@ rm -fv %{buildroot}%{_qt5_libdir}/lib*.la
 
 
 %changelog
+* Wed Oct 13 2021 peijiankang <peijiankang@kylinos.cn> - 5.15.2-1
+- update to upstream version 5.15.2
+
 * Mon Sep 14 2020 liuweibo <liuweibo10@huawei.com> - 5.11.1-5
 - Fix Source0 
 
